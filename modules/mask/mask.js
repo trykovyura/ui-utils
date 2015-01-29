@@ -148,7 +148,8 @@ angular.module('ui.mask', [])
           }
 
           function initializeElement(){
-            value = oldValueUnmasked = unmaskValue(controller.$modelValue || '');
+           // $modelValue always without mask
+            value = oldValueUnmasked = (controller.$modelValue || '');
             valueMasked = oldValue = maskValue(value);
             isValid = validateValue(value);
             var viewValue = isValid && value.length ? valueMasked : '';
@@ -192,13 +193,22 @@ angular.module('ui.mask', [])
           }
 
           function unmaskValue(value){
-            var valueUnmasked = '',
+            var valueUnmasked = '', 
+              incorrectValue,
               maskPatternsCopy = maskPatterns.slice();
             // Preprocess by stripping mask components from value
             value = value.toString();
             angular.forEach(maskComponents, function (component){
+             // check if value contains symbols from original placeholder
+              if (value.indexOf(component) == -1) {
+                  incorrectValue = true;
+              }
               value = value.replace(component, '');
             });
+            // prevent from adding incorrect symbols after backspace event 
+            if (incorrectValue) {
+                return valueUnmasked;
+            }
             angular.forEach(value.split(''), function (chr){
               if (maskPatternsCopy.length && maskPatternsCopy[0].test(chr)) {
                 valueUnmasked += chr;
